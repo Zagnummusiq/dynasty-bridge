@@ -8,6 +8,7 @@ import WhatsAppBubble from './components/WhatsAppBubble';
 import ChatPanel from './components/ChatPanel';
 import CartDrawer from './components/CartDrawer';
 import { Product, useCart } from './context/CartContext';
+import { getCachedProducts, syncProductsToCache } from './utils/db';
 
 const App: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -15,21 +16,39 @@ const App: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { cart } = useCart();
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000';
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const initData = async () => {
+      // 1. Load from cache immediately for offline support
+      try {
+        const cached = await getCachedProducts();
+        if (cached.length > 0) {
+          setProducts(cached);
+          setFilteredProducts(cached);
+          setIsLoading(false);
+        }
+      } catch (err) {
+        console.error('Cache read error:', err);
+      }
+
+      // 2. Fetch fresh data from API and update cache
       try {
         const res = await axios.get(`${API_URL}/api/products`);
-        setProducts(res.data);
-        setFilteredProducts(res.data);
+        const freshProducts = res.data;
+        setProducts(freshProducts);
+        setFilteredProducts(freshProducts);
+        await syncProductsToCache(freshProducts);
       } catch (err) {
-        console.error('Failed to fetch products:', err);
+        console.warn('API fetch failed, working in offline mode:', err);
+      } finally {
+        setIsLoading(false);
       }
     };
-    fetchProducts();
+    initData();
   }, []);
 
   useEffect(() => {
@@ -103,7 +122,14 @@ const App: React.FC = () => {
 
       {/* Main Content */}
       <main className="flex-grow max-w-7xl mx-auto w-full px-6 py-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+        {isLoading && products.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="w-12 h-12 border-4 border-mustard border-t-black rounded-full animate-spin"></div>
+            <p className="mt-4 text-zinc-500 font-medium">Loading Dynasty Mall...</p>
+          </div>
+        ) : (
+          <>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
           <div className="flex flex-wrap gap-2">
             {categories.map(cat => (
               <button
@@ -134,6 +160,8 @@ const App: React.FC = () => {
           <div className="text-center py-20 text-zinc-400">
             No products found matching your criteria.
           </div>
+        )}
+          </>
         )}
       </main>
 

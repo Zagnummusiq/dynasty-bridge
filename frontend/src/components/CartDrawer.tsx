@@ -68,7 +68,7 @@ const CartDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen
               </div>
               <button
                 disabled={cart.length === 0}
-                onClick={handleWhatsAppWhatsAppCheckout}
+                onClick={handleWhatsAppCheckout}
                 className="w-full bg-green-500 text-white font-bold py-4 rounded-xl hover:bg-green-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
               >
                 Order via WhatsApp

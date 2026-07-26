@@ -1,4 +1,5 @@
 const { Pool } = require('pg');
+const axios = require('axios');
 require('dotenv').config();
 
 const pool = new Pool({
@@ -7,6 +8,27 @@ const pool = new Pool({
     rejectUnauthorized: false
   }
 });
+
+const EXTERNAL_PRODUCTS_URL = 'https://kolzsticks.github.io/Free-Ecommerce-Products-Api/main/products.json';
+
+const manualProducts = [
+  {
+    name: "Pioneer TS-W3020PRO Samurai Subwoofer",
+    category: "Car Audio Systems",
+    description: "12 Inch, 3500W Max Power, Dual 4-Ohm",
+    price: 12500.00,
+    image_url: "https://images.jumia.co.ke/unsafe/fit-in/500x500/filters:fill(white)/product/12/345678/1.jpg",
+    stock_quantity: 10
+  },
+  {
+    name: "Sony Bravia 55-Inch 4K UHD Smart TV",
+    category: "TVs",
+    description: "55 Inch, 4K UHD, Smart Android TV, HDR",
+    price: 68000.00,
+    image_url: "https://images.jumia.co.ke/unsafe/fit-in/500x500/filters:fill(white)/product/87/116461/1.jpg",
+    stock_quantity: 5
+  }
+];
 
 const initDb = async () => {
   try {
@@ -31,21 +53,33 @@ const initDb = async () => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
-    console.log('Database tables created successfully');
+    console.log('Database tables ensured');
+
+    // Fetch external products
+    console.log('Fetching external products...');
+    const response = await axios.get(EXTERNAL_PRODUCTS_URL);
+    const externalProducts = response.data.map(p => ({
+      name: p.name,
+      description: p.description || `High quality ${p.subCategory}`,
+      price: p.priceCents / 100,
+      category: p.category,
+      image_url: p.image,
+      stock_quantity: 20
+    }));
+
+    const allProducts = [...manualProducts, ...externalProducts];
+
+    // Clear and re-seed to ensure latest data
+    await pool.query('TRUNCATE products RESTART IDENTITY CASCADE');
     
-    // Seed some initial data if empty
-    const productCount = await pool.query('SELECT count(*) FROM products');
-    if (parseInt(productCount.rows[0].count) === 0) {
-      await pool.query(`
-        INSERT INTO products (name, description, price, category, image_url, stock_quantity) VALUES
-        ('Sony Smart Android TV 43"', 'Full HD, YouTube, Netflix, Prime Video', 35000, 'TVs', 'https://images.jumia.co.ke/unsafe/fit-in/500x500/filters:fill(white)/product/87/116461/1.jpg', 10),
-        ('Samsung Double Door Fridge', '250L, Silver, Energy Saving', 55000, 'Fridges', 'https://images.jumia.co.ke/unsafe/fit-in/500x500/filters:fill(white)/product/56/123456/1.jpg', 5),
-        ('Pioneer Subwoofer 2.1', 'Bluetooth, FM Radio, USB', 8500, 'Subwoofers', 'https://images.jumia.co.ke/unsafe/fit-in/500x500/filters:fill(white)/product/12/345678/1.jpg', 15),
-        ('Gas Cylinder 6kg (Complete Set)', 'Full gas, burner, and grill', 4500, 'Gas', 'https://images.jumia.co.ke/unsafe/fit-in/500x500/filters:fill(white)/product/90/112233/1.jpg', 20);
-      `);
-      console.log('Initial products seeded');
+    for (const product of allProducts) {
+      await pool.query(
+        'INSERT INTO products (name, description, price, category, image_url, stock_quantity) VALUES ($1, $2, $3, $4, $5, $6)',
+        [product.name, product.description, product.price, product.category, product.image_url, product.stock_quantity]
+      );
     }
     
+    console.log(`Successfully seeded ${allProducts.length} products`);
     process.exit(0);
   } catch (err) {
     console.error('Error initializing database:', err);
