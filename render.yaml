@@ -10,7 +10,7 @@ services:
       - key: PORT
         value: 10000
       - key: DATABASE_URL
-        sync: false
+        value: postgresql://imanga_db_user:Ax4Fed38yJkZedTyTwCXshwEk2JVjJeR@dpg-d9hi1hkm0tmc73atrnbg-a/imanga_db?ssl=true
 
   - type: static
     name: dynasty-bridge-frontend
