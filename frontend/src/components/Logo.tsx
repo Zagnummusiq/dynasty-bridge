@@ -7,13 +7,12 @@ const Logo: React.FC<{ className?: string }> = ({ className }) => {
         {/* DYNASTY Text */}
         <text x="10" y="40" className="font-bold fill-black" style={{ fontSize: '24px', letterSpacing: '2px' }}>
           DYNA
-          <tspan className="italic" style={{ fontSize: '32px', dy: '4px' }}>S</tspan>
-          <tspan dy="-4px">TY</tspan>
+          <tspan className="italic" style={{ fontSize: '42px' }} dy="6px">S</tspan>
+          <tspan dy="-6px">TY</tspan>
         </text>
         
         {/* BRIDGE Text starting below 'N' of DYNASTY */}
-        {/* D (0) Y (20) N (40) A (60) */}
-        <text x="50" y="75" className="fill-black" style={{ fontSize: '20px', fontFamily: '"Brush Script MT", cursive' }}>
+        <text x="68" y="75" className="fill-black" style={{ fontSize: '24px', fontFamily: '"Brush Script MT", cursive' }}>
           Bridge
         </text>
         

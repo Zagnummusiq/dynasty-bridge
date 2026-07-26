@@ -7,7 +7,8 @@ import ProductCard from './components/ProductCard';
 import WhatsAppBubble from './components/WhatsAppBubble';
 import ChatPanel from './components/ChatPanel';
 import CartDrawer from './components/CartDrawer';
-import { Product, useCart } from './context/CartContext';
+import type { Product } from './context/CartContext';
+import { useCart } from './context/CartContext';
 import { getCachedProducts, syncProductsToCache } from './utils/db';
 
 const App: React.FC = () => {
@@ -111,13 +112,39 @@ const App: React.FC = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="bg-mustard py-12 px-6 flex flex-col items-center text-center">
-        <h1 className="text-4xl md:text-6xl font-black text-black mb-4 uppercase italic">
-          Dynasty Bridge Mall
+      <section className="bg-mustard py-16 px-6 flex flex-col items-center text-center relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+          <div className="absolute top-10 left-10 w-40 h-40 border-8 border-black rounded-full"></div>
+          <div className="absolute bottom-10 right-10 w-60 h-60 border-8 border-black rounded-full rotate-45"></div>
+        </div>
+        <h1 className="text-5xl md:text-8xl font-black text-black mb-4 uppercase italic leading-none z-10">
+          Dynasty <span className="text-zinc-800">Bridge</span>
         </h1>
-        <p className="text-black font-medium max-w-2xl text-sm md:text-base opacity-80">
-          Your one-stop shop for Smart Android TVs, Fridges, Car Audio, Phone Accessories, Cooking Gas, and Home Electricals in Mumias.
+        <p className="text-black font-bold max-w-2xl text-base md:text-xl opacity-90 z-10 mb-8">
+          MUMIAS' ULTIMATE ELECTRONICS & HOME HUB
         </p>
+        <div className="flex gap-4 z-10">
+          <button className="bg-black text-white px-8 py-3 rounded-full font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform">
+            Shop TVs
+          </button>
+          <button className="bg-white text-black px-8 py-3 rounded-full font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform border-2 border-black">
+            Home Appliances
+          </button>
+        </div>
+      </section>
+
+      {/* Featured Categories */}
+      <section className="max-w-7xl mx-auto w-full px-6 py-12">
+        <h2 className="text-2xl font-black uppercase tracking-tight mb-8">Shop by Department</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {['Smart TVs', 'Fridges', 'Gas & Kitchen', 'Audio Systems'].map((cat) => (
+            <div key={cat} className="group cursor-pointer bg-zinc-100 rounded-2xl p-6 hover:bg-mustard transition-all overflow-hidden relative">
+              <h3 className="font-bold text-lg group-hover:text-black">{cat}</h3>
+              <p className="text-xs text-zinc-500 group-hover:text-black/60 uppercase font-bold tracking-widest mt-1">Explore Range</p>
+              <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-black/5 rounded-full group-hover:scale-150 transition-transform"></div>
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* Main Content */}

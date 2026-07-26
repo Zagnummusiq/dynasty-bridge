@@ -1,11 +1,13 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 @layer base {
   body {
     @apply bg-zinc-50 text-zinc-900;
   }
+}
+
+@theme {
+  --color-mustard: #FFDB58;
 }
 
 .artistic-s {

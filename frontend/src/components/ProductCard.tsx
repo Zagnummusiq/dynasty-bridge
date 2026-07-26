@@ -1,5 +1,6 @@
 import React from 'react';
-import { Product, useCart } from '../context/CartContext';
+import type { Product } from '../context/CartContext';
+import { useCart } from '../context/CartContext';
 import { ShoppingCart } from 'lucide-react';
 
 const ProductCard: React.FC<{ product: Product }> = ({ product }) => {

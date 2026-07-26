@@ -1,5 +1,6 @@
-import { openDB, IDBPDatabase } from 'idb';
-import { Product } from '../context/CartContext';
+import { openDB } from 'idb';
+import type { IDBPDatabase } from 'idb';
+import type { Product } from '../context/CartContext';
 
 const DB_NAME = 'dynasty-bridge-db';
 const STORE_NAME = 'products';

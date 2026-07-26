@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, User, Bot, X, MessageSquare } from 'lucide-react';
+import { Send, Bot, X, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const ChatPanel: React.FC = () => {
