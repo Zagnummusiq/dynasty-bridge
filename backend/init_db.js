@@ -70,15 +70,22 @@ const initDb = async () => {
     // Fetch external products
     console.log('Fetching external products...');
     const response = await axios.get(EXTERNAL_PRODUCTS_URL);
-    const externalProducts = response.data.map((p, i) => ({
+    
+    // Filter strictly for Electronics, Gadgets, and Home Appliances
+    const filteredExternal = response.data.filter(p => {
+      const cat = p.category.toLowerCase();
+      return cat.includes('electronics') || cat.includes('gadgets') || (cat.includes('home') && !cat.includes('decor'));
+    });
+
+    const externalProducts = filteredExternal.map((p, i) => ({
       name: p.name,
       description: p.description || `High quality ${p.subCategory}`,
       price: p.priceCents / 100,
       category: p.category,
       image_url: p.image,
       stock_quantity: 20,
-      is_on_offer: i % 5 === 0,
-      discount_percentage: i % 5 === 0 ? 15 : 0
+      is_on_offer: i % 3 === 0, // Increased offer frequency for the focused niche
+      discount_percentage: i % 3 === 0 ? 12 : 0
     }));
 
     const allProducts = [...manualProducts, ...externalProducts];
