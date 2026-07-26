@@ -136,12 +136,19 @@ const App: React.FC = () => {
 
       <PromoFlyer products={products} />
 
-      {/* Featured Categories */}
+      {/* Dynamic Shop by Category */}
       <section className="max-w-7xl mx-auto w-full px-6 py-12">
-        <h2 className="text-2xl font-black uppercase tracking-tight mb-8">Shop by Department</h2>
+        <h2 className="text-2xl font-black uppercase tracking-tight mb-8">Shop by Category</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {['Smart TVs', 'Fridges', 'Gas & Kitchen', 'Audio Systems'].map((cat) => (
-            <div key={cat} className="group cursor-pointer bg-zinc-100 rounded-2xl p-6 hover:bg-mustard transition-all overflow-hidden relative">
+          {categories.filter(c => c !== 'All').map((cat) => (
+            <div 
+              key={cat} 
+              onClick={() => {
+                setSelectedCategory(cat);
+                document.getElementById('products-grid')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="group cursor-pointer bg-zinc-100 rounded-2xl p-6 hover:bg-mustard transition-all overflow-hidden relative"
+            >
               <h3 className="font-bold text-lg group-hover:text-black">{cat}</h3>
               <p className="text-xs text-zinc-500 group-hover:text-black/60 uppercase font-bold tracking-widest mt-1">Explore Range</p>
               <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-black/5 rounded-full group-hover:scale-150 transition-transform"></div>
@@ -151,7 +158,7 @@ const App: React.FC = () => {
       </section>
 
       {/* Main Content */}
-      <main className="flex-grow max-w-7xl mx-auto w-full px-6 py-8">
+      <main id="products-grid" className="flex-grow max-w-7xl mx-auto w-full px-6 py-8">
         {isLoading && products.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
             <div className="w-12 h-12 border-4 border-mustard border-t-black rounded-full animate-spin"></div>
