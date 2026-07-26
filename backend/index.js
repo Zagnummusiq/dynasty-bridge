@@ -16,6 +16,14 @@ const pool = new Pool({
   }
 });
 
+app.get('/', (req, res) => {
+  res.send('Dynasty Bridge Backend API is Live! Shop is tracking Kenya Time.');
+});
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 app.get('/api/products', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM products ORDER BY id ASC');
