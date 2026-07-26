@@ -1,0 +1,180 @@
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { ShoppingCart, Search, Phone, MapPin } from 'lucide-react';
+import Logo from './components/Logo';
+import ShopStatus from './components/ShopStatus';
+import ProductCard from './components/ProductCard';
+import WhatsAppBubble from './components/WhatsAppBubble';
+import ChatPanel from './components/ChatPanel';
+import CartDrawer from './components/CartDrawer';
+import { Product, useCart } from './context/CartContext';
+
+const App: React.FC = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const { cart } = useCart();
+
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000';
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/products`);
+        setProducts(res.data);
+        setFilteredProducts(res.data);
+      } catch (err) {
+        console.error('Failed to fetch products:', err);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    let filtered = products;
+    if (searchTerm) {
+      filtered = filtered.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    }
+    if (selectedCategory !== 'All') {
+      filtered = filtered.filter(p => p.category === selectedCategory);
+    }
+    setFilteredProducts(filtered);
+  }, [searchTerm, selectedCategory, products]);
+
+  const categories = ['All', ...new Set(products.map(p => p.category))];
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      {/* Top Header */}
+      <header className="bg-black text-white py-2 px-6 flex justify-between items-center text-[10px] uppercase tracking-widest font-bold">
+        <div className="flex items-center gap-4">
+          <ShopStatus />
+          <span className="hidden md:inline">📍 Mumias, opposite Frankmatt Junction</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <a href="tel:0740930686" className="flex items-center gap-1 hover:text-mustard">
+            <Phone size={10} /> Hotline: 0740930686
+          </a>
+        </div>
+      </header>
+
+      {/* Main Navbar */}
+      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-100 px-6 py-4 flex justify-between items-center">
+        <div className="flex items-center gap-8">
+          <Logo className="h-10 w-auto" />
+          <div className="hidden lg:flex items-center bg-zinc-100 rounded-full px-4 py-2 w-96">
+            <Search size={18} className="text-zinc-400" />
+            <input
+              type="text"
+              placeholder="Search smart TVs, fridges, gas..."
+              className="bg-transparent border-none focus:ring-0 text-sm ml-2 w-full"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-6">
+          <button
+            onClick={() => setIsCartOpen(true)}
+            className="relative p-2 hover:bg-zinc-100 rounded-full transition-colors"
+          >
+            <ShoppingCart size={24} />
+            {cart.length > 0 && (
+              <span className="absolute top-0 right-0 bg-mustard text-black text-[10px] font-bold h-5 w-5 rounded-full flex items-center justify-center border-2 border-white">
+                {cart.length}
+              </span>
+            )}
+          </button>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="bg-mustard py-12 px-6 flex flex-col items-center text-center">
+        <h1 className="text-4xl md:text-6xl font-black text-black mb-4 uppercase italic">
+          Dynasty Bridge Mall
+        </h1>
+        <p className="text-black font-medium max-w-2xl text-sm md:text-base opacity-80">
+          Your one-stop shop for Smart Android TVs, Fridges, Car Audio, Phone Accessories, Cooking Gas, and Home Electricals in Mumias.
+        </p>
+      </section>
+
+      {/* Main Content */}
+      <main className="flex-grow max-w-7xl mx-auto w-full px-6 py-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+          <div className="flex flex-wrap gap-2">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${
+                  selectedCategory === cat
+                    ? 'bg-black text-white border-black'
+                    : 'bg-white text-zinc-600 border-zinc-200 hover:border-black'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+          <p className="text-zinc-400 text-xs font-medium uppercase tracking-widest">
+            Showing {filteredProducts.length} items
+          </p>
+        </div>
+
+        {filteredProducts.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {filteredProducts.map(p => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 text-zinc-400">
+            No products found matching your criteria.
+          </div>
+        )}
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-zinc-900 text-white py-12 px-6 mt-20">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12">
+          <div>
+            <Logo className="h-8 w-auto mb-6 bg-transparent" />
+            <p className="text-zinc-500 text-sm leading-relaxed">
+              Dynasty Bridge is Mumias' leading electronics hub. We deal in quality appliances, electronics, and home essentials with guaranteed durability and the best prices in town.
+            </p>
+          </div>
+          <div className="space-y-4">
+            <h4 className="font-bold uppercase tracking-widest text-xs text-zinc-400">Contact Us</h4>
+            <div className="flex items-center gap-3 text-sm text-zinc-300">
+              <Phone size={16} /> 0740930686
+            </div>
+            <div className="flex items-center gap-3 text-sm text-zinc-300">
+              <MapPin size={16} /> Opposite Frankmatt Junction, Mumias Town
+            </div>
+          </div>
+          <div className="space-y-4">
+            <h4 className="font-bold uppercase tracking-widest text-xs text-zinc-400">Shop Location</h4>
+            <div className="w-full h-40 bg-zinc-800 rounded-xl overflow-hidden grayscale contrast-125 opacity-50">
+               {/* Map placeholder */}
+               <div className="w-full h-full flex items-center justify-center text-xs text-zinc-600 italic">
+                 Map view for Mumias Town
+               </div>
+            </div>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto border-t border-zinc-800 mt-12 pt-8 text-center text-[10px] text-zinc-600 uppercase tracking-widest">
+          &copy; 2026 Dynasty Bridge. All rights reserved. Built for Mumias Kakamega.
+        </div>
+      </footer>
+
+      <WhatsAppBubble />
+      <ChatPanel />
+      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+    </div>
+  );
+};
+
+export default App;
