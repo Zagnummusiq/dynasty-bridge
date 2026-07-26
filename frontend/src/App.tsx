@@ -7,6 +7,7 @@ import ProductCard from './components/ProductCard';
 import WhatsAppBubble from './components/WhatsAppBubble';
 import ChatPanel from './components/ChatPanel';
 import CartDrawer from './components/CartDrawer';
+import PromoFlyer from './components/PromoFlyer';
 import type { Product } from './context/CartContext';
 import { useCart } from './context/CartContext';
 import { getCachedProducts, syncProductsToCache } from './utils/db';
@@ -132,6 +133,8 @@ const App: React.FC = () => {
           </button>
         </div>
       </section>
+
+      <PromoFlyer products={products} />
 
       {/* Featured Categories */}
       <section className="max-w-7xl mx-auto w-full px-6 py-12">

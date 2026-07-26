@@ -18,7 +18,9 @@ const manualProducts = [
     description: "12 Inch, 3500W Max Power, Dual 4-Ohm",
     price: 12500.00,
     image_url: "https://images.jumia.co.ke/unsafe/fit-in/500x500/filters:fill(white)/product/12/345678/1.jpg",
-    stock_quantity: 10
+    stock_quantity: 10,
+    is_on_offer: true,
+    discount_percentage: 15
   },
   {
     name: "Sony Bravia 55-Inch 4K UHD Smart TV",
@@ -26,23 +28,34 @@ const manualProducts = [
     description: "55 Inch, 4K UHD, Smart Android TV, HDR",
     price: 68000.00,
     image_url: "https://images.jumia.co.ke/unsafe/fit-in/500x500/filters:fill(white)/product/87/116461/1.jpg",
-    stock_quantity: 5
+    stock_quantity: 5,
+    is_on_offer: true,
+    discount_percentage: 10
   }
 ];
 
 const initDb = async () => {
   try {
+    console.log('Dropping existing table...');
+    await pool.query('DROP TABLE IF EXISTS products CASCADE');
+    
+    console.log('Creating products table...');
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS products (
+      CREATE TABLE products (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         description TEXT,
         price DECIMAL(10, 2) NOT NULL,
         category TEXT NOT NULL,
         image_url TEXT,
-        stock_quantity INTEGER DEFAULT 0
-      );
+        stock_quantity INTEGER DEFAULT 0,
+        is_on_offer BOOLEAN DEFAULT false,
+        discount_percentage INTEGER DEFAULT 0
+      )
+    `);
 
+    console.log('Ensuring orders table...');
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS orders (
         id SERIAL PRIMARY KEY,
         customer_name TEXT NOT NULL,
@@ -51,35 +64,34 @@ const initDb = async () => {
         total_amount DECIMAL(10, 2) NOT NULL,
         status TEXT DEFAULT 'pending',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
+      )
     `);
-    console.log('Database tables ensured');
 
     // Fetch external products
     console.log('Fetching external products...');
     const response = await axios.get(EXTERNAL_PRODUCTS_URL);
-    const externalProducts = response.data.map(p => ({
+    const externalProducts = response.data.map((p, i) => ({
       name: p.name,
       description: p.description || `High quality ${p.subCategory}`,
       price: p.priceCents / 100,
       category: p.category,
       image_url: p.image,
-      stock_quantity: 20
+      stock_quantity: 20,
+      is_on_offer: i % 5 === 0,
+      discount_percentage: i % 5 === 0 ? 15 : 0
     }));
 
     const allProducts = [...manualProducts, ...externalProducts];
-
-    // Clear and re-seed to ensure latest data
-    await pool.query('TRUNCATE products RESTART IDENTITY CASCADE');
     
+    console.log('Seeding products...');
     for (const product of allProducts) {
       await pool.query(
-        'INSERT INTO products (name, description, price, category, image_url, stock_quantity) VALUES ($1, $2, $3, $4, $5, $6)',
-        [product.name, product.description, product.price, product.category, product.image_url, product.stock_quantity]
+        'INSERT INTO products (name, description, price, category, image_url, stock_quantity, is_on_offer, discount_percentage) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+        [product.name, product.description, product.price, product.category, product.image_url, product.stock_quantity, product.is_on_offer || false, product.discount_percentage || 0]
       );
     }
     
-    console.log(`Successfully seeded ${allProducts.length} products`);
+    console.log(`Successfully seeded ${allProducts.length} products with seasonal offers`);
     process.exit(0);
   } catch (err) {
     console.error('Error initializing database:', err);
