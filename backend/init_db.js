@@ -2,11 +2,15 @@ const { Pool } = require('pg');
 const axios = require('axios');
 require('dotenv').config();
 
+const connectionString = process.env.RENDER_DB_URL;
+if (!connectionString) {
+  console.error('ERROR: RENDER_DB_URL is not set. Aborting.');
+  process.exit(1);
+}
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://imanga_db_user:Ax4Fed38yJkZedTyTwCXshwEk2JVjJeR@dpg-d9hi1hkm0tmc73atrnbg-a.oregon-postgres.render.com/imanga_db',
-  ssl: {
-    rejectUnauthorized: false
-  }
+  connectionString,
+  ssl: { rejectUnauthorized: false }
 });
 
 const EXTERNAL_PRODUCTS_URL = 'https://kolzsticks.github.io/Free-Ecommerce-Products-Api/main/products.json';
@@ -17,7 +21,7 @@ const manualProducts = [
     category: "Car Audio Systems",
     description: "12 Inch, 3500W Max Power, Dual 4-Ohm",
     price: 12500.00,
-    image_url: "https://images.jumia.co.ke/unsafe/fit-in/500x500/filters:fill(white)/product/12/345678/1.jpg",
+    image_url: "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=500&auto=format&fit=crop",
     stock_quantity: 10,
     is_on_offer: true,
     discount_percentage: 15
@@ -27,7 +31,7 @@ const manualProducts = [
     category: "TVs",
     description: "55 Inch, 4K UHD, Smart Android TV, HDR",
     price: 68000.00,
-    image_url: "https://images.jumia.co.ke/unsafe/fit-in/500x500/filters:fill(white)/product/87/116461/1.jpg",
+    image_url: "https://images.unsplash.com/photo-1593359677879-a4bb92f4551a?w=500&auto=format&fit=crop",
     stock_quantity: 5,
     is_on_offer: true,
     discount_percentage: 10
@@ -36,9 +40,9 @@ const manualProducts = [
 
 const initDb = async () => {
   try {
-    console.log('Dropping existing table...');
+    console.log('Dropping existing products table...');
     await pool.query('DROP TABLE IF EXISTS products CASCADE');
-    
+
     console.log('Creating products table...');
     await pool.query(`
       CREATE TABLE products (
@@ -67,41 +71,43 @@ const initDb = async () => {
       )
     `);
 
-    // Fetch external products
     console.log('Fetching external products...');
-    const response = await axios.get(EXTERNAL_PRODUCTS_URL);
-    
-    // Filter strictly for Electronics, Gadgets, and Home Appliances
-    const filteredExternal = response.data.filter(p => {
-      const cat = p.category.toLowerCase();
-      return cat.includes('electronics') || cat.includes('gadgets') || (cat.includes('home') && !cat.includes('decor'));
-    });
-
-    const externalProducts = filteredExternal.map((p, i) => ({
-      name: p.name,
-      description: p.description || `High quality ${p.subCategory}`,
-      price: p.priceCents / 100,
-      category: p.category,
-      image_url: p.image,
-      stock_quantity: 20,
-      is_on_offer: i % 3 === 0, // Increased offer frequency for the focused niche
-      discount_percentage: i % 3 === 0 ? 12 : 0
-    }));
+    let externalProducts = [];
+    try {
+      const response = await axios.get(EXTERNAL_PRODUCTS_URL, { timeout: 10000 });
+      const filtered = response.data.filter(p => {
+        const cat = p.category.toLowerCase();
+        return cat.includes('electronics') || cat.includes('gadgets') || (cat.includes('home') && !cat.includes('decor'));
+      });
+      externalProducts = filtered.map((p, i) => ({
+        name: p.name,
+        description: p.description || `High quality ${p.subCategory}`,
+        price: p.priceCents / 100,
+        category: p.category,
+        image_url: p.image,
+        stock_quantity: 20,
+        is_on_offer: i % 3 === 0,
+        discount_percentage: i % 3 === 0 ? 12 : 0
+      }));
+      console.log(`Fetched ${externalProducts.length} external products.`);
+    } catch (err) {
+      console.warn('Could not fetch external products, seeding with manual only:', err.message);
+    }
 
     const allProducts = [...manualProducts, ...externalProducts];
-    
-    console.log('Seeding products...');
+
+    console.log(`Seeding ${allProducts.length} products...`);
     for (const product of allProducts) {
       await pool.query(
         'INSERT INTO products (name, description, price, category, image_url, stock_quantity, is_on_offer, discount_percentage) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
         [product.name, product.description, product.price, product.category, product.image_url, product.stock_quantity, product.is_on_offer || false, product.discount_percentage || 0]
       );
     }
-    
-    console.log(`Successfully seeded ${allProducts.length} products with seasonal offers`);
+
+    console.log('Database initialised successfully.');
     process.exit(0);
   } catch (err) {
-    console.error('Error initializing database:', err);
+    console.error('Error initialising database:', err.message);
     process.exit(1);
   }
 };

@@ -25,7 +25,8 @@ const App: React.FC = () => {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const { cart } = useCart();
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:10000';
+  // Vite proxies /api → backend:8000 in dev; set VITE_API_URL for production deploys
+  const API_URL = import.meta.env.VITE_API_URL || '';
 
   // ── Online/offline detection ─────────────────────────────────────────────
   useEffect(() => {
