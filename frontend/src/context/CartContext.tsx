@@ -6,8 +6,12 @@ export interface Product {
   description: string;
   price: number;
   category: string;
+  subcategory?: string;
   image_url: string;
   stock_quantity: number;
+  is_on_offer?: boolean;
+  discount_percentage?: number;
+  source?: 'api' | 'shop';
 }
 
 interface CartItem extends Product {
