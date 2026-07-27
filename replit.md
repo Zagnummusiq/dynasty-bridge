@@ -58,8 +58,14 @@ The `keywords` array on each subcategory controls automatic matching of API prod
 
 ## Backend
 
-The backend (`backend/index.js`) connects to a PostgreSQL database via `DATABASE_URL`.  
-Currently the Render-hosted DB URL is hardcoded as fallback. Set `DATABASE_URL` in environment secrets for production.
+The backend (`backend/index.js`) runs on **port 8000** and connects to the Render PostgreSQL database via the `RENDER_DB_URL` secret.
+
+- Run: `cd backend && node index.js`
+- Workflow: **"Backend API"** (console, port 8000)
+- Health check: `GET /health` — returns `{ status, db, timestamp }`
+- The Vite dev server proxies `/api/*` → `localhost:8000` so the frontend uses relative URLs
+
+To re-seed the database: `cd backend && node init_db.js`
 
 ## PWA / Offline
 
