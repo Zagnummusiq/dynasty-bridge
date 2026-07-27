@@ -1,31 +1,38 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
-import { ShoppingCart, Search, Phone, MapPin, RefreshCw } from 'lucide-react';
+import { ShoppingCart, Search, Phone, MapPin, X, SlidersHorizontal } from 'lucide-react';
 import Logo from './components/Logo';
 import ShopStatus from './components/ShopStatus';
 import ProductCard from './components/ProductCard';
 import WhatsAppBubble from './components/WhatsAppBubble';
 import ChatPanel from './components/ChatPanel';
 import CartDrawer from './components/CartDrawer';
-import PromoFlyer from './components/PromoFlyer';
-import CategoryBrowser from './components/CategoryBrowser';
+import HeroBanner from './components/HeroBanner';
+import FlashDeals from './components/FlashDeals';
 import type { Product } from './context/CartContext';
 import { useCart } from './context/CartContext';
 import { getCachedProducts, syncProductsToCache } from './utils/db';
 import { SHOP_PRODUCTS } from './data/shopProducts';
-import { CATEGORIES, matchSubcategory } from './data/categories';
+import { CATEGORIES, matchSubcategory, isExcludedCategory } from './data/categories';
+
+const SORT_OPTIONS = [
+  { value: 'default', label: 'Default' },
+  { value: 'price_asc', label: 'Price: Low → High' },
+  { value: 'price_desc', label: 'Price: High → Low' },
+  { value: 'offers', label: 'Offers First' },
+];
 
 const App: React.FC = () => {
   const [apiProducts, setApiProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedSubcategory, setSelectedSubcategory] = useState('');
+  const [sortBy, setSortBy] = useState('default');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const { cart } = useCart();
 
-  // Vite proxies /api → backend:8000 in dev; set VITE_API_URL for production deploys
   const API_URL = import.meta.env.VITE_API_URL || '';
 
   // ── Online/offline detection ─────────────────────────────────────────────
@@ -34,41 +41,26 @@ const App: React.FC = () => {
     const onOffline = () => setIsOffline(true);
     window.addEventListener('online', onOnline);
     window.addEventListener('offline', onOffline);
-    return () => {
-      window.removeEventListener('online', onOnline);
-      window.removeEventListener('offline', onOffline);
-    };
+    return () => { window.removeEventListener('online', onOnline); window.removeEventListener('offline', onOffline); };
   }, []);
 
-  // ── Load API products (cache-first then network) ─────────────────────────
+  // ── Load products ────────────────────────────────────────────────────────
   useEffect(() => {
-    const initData = async () => {
-      // 1. Load from IndexedDB cache immediately
+    const init = async () => {
       try {
         const cached = await getCachedProducts();
-        // Only keep API products (id < 10000) from cache
         const cachedApi = cached.filter(p => p.id < 10000);
-        if (cachedApi.length > 0) {
-          setApiProducts(cachedApi);
-          setIsLoading(false);
-        }
-      } catch (err) {
-        console.error('Cache read error:', err);
-      }
+        if (cachedApi.length > 0) { setApiProducts(cachedApi); setIsLoading(false); }
+      } catch { /* ignore */ }
 
-      // 2. Fetch fresh data from API
       try {
         const res = await axios.get(`${API_URL}/api/products`, { timeout: 10000 });
-        const fresh: Product[] = res.data.map((p: Product) => {
-          // Try to assign subcategory from categories data
-          const match = matchSubcategory(p.name, p.category);
-          return {
-            ...p,
-            source: 'api' as const,
-            category: match?.category ?? p.category,
-            subcategory: match?.subcategory,
-          };
-        });
+        const fresh: Product[] = (res.data as Product[])
+          .filter(p => !isExcludedCategory(p.category))  // strictly no fashion/apparel
+          .map(p => {
+            const match = matchSubcategory(p.name, p.category);
+            return { ...p, source: 'api' as const, category: match?.category ?? p.category, subcategory: match?.subcategory };
+          });
         setApiProducts(fresh);
         await syncProductsToCache(fresh);
       } catch (err) {
@@ -77,298 +69,292 @@ const App: React.FC = () => {
         setIsLoading(false);
       }
     };
-    initData();
+    init();
   }, []);
 
-  // ── Merge shop + API products ─────────────────────────────────────────────
+  // ── Merge shop + API products ────────────────────────────────────────────
   const allProducts = useMemo<Product[]>(() => {
-    const shopAsProducts: Product[] = SHOP_PRODUCTS.map(p => ({ ...p }));
-    // Deduplicate: prefer shop products, append API products not in shop
-    const shopIds = new Set(shopAsProducts.map(p => p.id));
-    const uniqueApi = apiProducts.filter(p => !shopIds.has(p.id));
-    return [...shopAsProducts, ...uniqueApi];
+    const shopIds = new Set(SHOP_PRODUCTS.map(p => p.id));
+    return [...(SHOP_PRODUCTS as Product[]), ...apiProducts.filter(p => !shopIds.has(p.id))];
   }, [apiProducts]);
 
-  // ── Build product counts per category/subcategory ────────────────────────
-  const productCounts = useMemo<Record<string, Record<string, number>>>(() => {
-    const counts: Record<string, Record<string, number>> = {};
-    for (const p of allProducts) {
-      if (!p.category) continue;
-      if (!counts[p.category]) counts[p.category] = {};
-      if (p.subcategory) {
-        counts[p.category][p.subcategory] = (counts[p.category][p.subcategory] || 0) + 1;
-      } else {
-        counts[p.category]['_uncategorized'] = (counts[p.category]['_uncategorized'] || 0) + 1;
-      }
-    }
-    return counts;
-  }, [allProducts]);
-
-  // ── Filter products ───────────────────────────────────────────────────────
+  // ── Filter + sort ────────────────────────────────────────────────────────
   const filteredProducts = useMemo(() => {
     let list = allProducts;
     if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      list = list.filter(
-        p =>
-          p.name.toLowerCase().includes(term) ||
-          p.description?.toLowerCase().includes(term) ||
-          p.category?.toLowerCase().includes(term)
-      );
+      const t = searchTerm.toLowerCase();
+      list = list.filter(p => p.name.toLowerCase().includes(t) || p.description?.toLowerCase().includes(t) || p.category?.toLowerCase().includes(t));
     }
-    if (selectedCategory) {
-      list = list.filter(p => p.category === selectedCategory);
-    }
-    if (selectedSubcategory) {
-      list = list.filter(p => p.subcategory === selectedSubcategory);
-    }
-    return list;
-  }, [allProducts, searchTerm, selectedCategory, selectedSubcategory]);
+    if (selectedCategory) list = list.filter(p => p.category === selectedCategory);
+    if (selectedSubcategory) list = list.filter(p => p.subcategory === selectedSubcategory);
 
-  const handleClearFilters = () => {
-    setSelectedCategory('');
+    if (sortBy === 'price_asc') list = [...list].sort((a, b) => a.price - b.price);
+    else if (sortBy === 'price_desc') list = [...list].sort((a, b) => b.price - a.price);
+    else if (sortBy === 'offers') list = [...list].sort((a, b) => (b.is_on_offer ? 1 : 0) - (a.is_on_offer ? 1 : 0));
+
+    return list;
+  }, [allProducts, searchTerm, selectedCategory, selectedSubcategory, sortBy]);
+
+  const offerProducts = useMemo(() => allProducts.filter(p => p.is_on_offer && p.discount_percentage && p.discount_percentage > 0), [allProducts]);
+
+  // Subcategories for selected category
+  const subcategories = useMemo(() => {
+    const cat = CATEGORIES.find(c => c.name === selectedCategory);
+    if (!cat) return [];
+    return cat.subcategories.filter(sub => allProducts.some(p => p.subcategory === sub.name));
+  }, [selectedCategory, allProducts]);
+
+  const clearFilters = () => { setSelectedCategory(''); setSelectedSubcategory(''); setSearchTerm(''); setSortBy('default'); };
+
+  const handleCategorySelect = (cat: string) => {
+    setSelectedCategory(cat);
     setSelectedSubcategory('');
+    setSearchTerm('');
+    document.getElementById('products-grid')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // ── Category quick-tabs (above product grid) ──────────────────────────────
-  const categoryTabs = useMemo(() => {
-    const known = CATEGORIES.map(c => c.name);
-    const extra = [...new Set(allProducts.map(p => p.category))].filter(c => !known.includes(c));
-    return ['All', ...known.filter(c => allProducts.some(p => p.category === c)), ...extra];
-  }, [allProducts]);
-
-  const activeFilterLabel = selectedSubcategory
-    ? `${selectedCategory} → ${selectedSubcategory}`
-    : selectedCategory || 'All Products';
-
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen bg-zinc-100 flex flex-col">
 
-      {/* Offline banner */}
+      {/* ── Offline banner ── */}
       {isOffline && (
-        <div className="bg-amber-400 text-black text-[11px] font-bold text-center py-2 px-4 uppercase tracking-widest flex items-center justify-center gap-2">
-          <RefreshCw size={12} className="animate-spin" />
-          You're offline — browsing cached products
+        <div className="bg-amber-400 text-black text-[11px] font-bold text-center py-1.5 px-4 uppercase tracking-widest">
+          ⚡ You're offline — browsing cached products
         </div>
       )}
 
-      {/* Top Header */}
-      <header className="bg-black text-white py-2 px-6 flex justify-between items-center text-[10px] uppercase tracking-widest font-bold">
-        <div className="flex items-center gap-4">
-          <ShopStatus />
-          <span className="hidden md:inline">📍 Mumias, opposite Frankmatt Junction</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <a href="tel:0740930686" className="flex items-center gap-1 hover:text-mustard">
-            <Phone size={10} /> Hotline: 0740930686
-          </a>
-        </div>
-      </header>
-
-      {/* Main Navbar */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-100 px-6 py-4 flex justify-between items-center">
-        <div className="flex items-center gap-8">
-          <Logo className="h-10 w-auto" />
-          <div className="hidden lg:flex items-center bg-zinc-100 rounded-full px-4 py-2 w-96">
-            <Search size={18} className="text-zinc-400" />
-            <input
-              type="text"
-              placeholder="Search TVs, fridges, speakers, solar..."
-              className="bg-transparent border-none focus:ring-0 text-sm ml-2 w-full outline-none"
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                if (e.target.value) {
-                  setSelectedCategory('');
-                  setSelectedSubcategory('');
-                }
-              }}
-            />
+      {/* ── Announcement bar ── */}
+      <div className="bg-zinc-900 text-white text-[11px] py-1.5 px-4 hidden md:block">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <ShopStatus />
+            <span className="flex items-center gap-1"><MapPin size={10} /> Mumias, opposite Frankmatt Junction</span>
           </div>
-        </div>
-
-        <div className="flex items-center gap-6">
-          <button
-            onClick={() => setIsCartOpen(true)}
-            className="relative p-2 hover:bg-zinc-100 rounded-full transition-colors"
-          >
-            <ShoppingCart size={24} />
-            {cart.length > 0 && (
-              <span className="absolute top-0 right-0 bg-mustard text-black text-[10px] font-bold h-5 w-5 rounded-full flex items-center justify-center border-2 border-white">
-                {cart.length}
-              </span>
-            )}
-          </button>
-        </div>
-      </nav>
-
-      {/* Mobile Search */}
-      <div className="lg:hidden px-4 py-3 bg-white border-b border-zinc-100">
-        <div className="flex items-center bg-zinc-100 rounded-full px-4 py-2">
-          <Search size={16} className="text-zinc-400" />
-          <input
-            type="text"
-            placeholder="Search products..."
-            className="bg-transparent border-none focus:ring-0 text-sm ml-2 w-full outline-none"
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              if (e.target.value) {
-                setSelectedCategory('');
-                setSelectedSubcategory('');
-              }
-            }}
-          />
+          <a href="tel:0740930686" className="flex items-center gap-1 hover:text-mustard transition-colors">
+            <Phone size={10} /> 0740930686
+          </a>
         </div>
       </div>
 
-      {/* Hero Section */}
-      <section className="bg-mustard py-16 px-6 flex flex-col items-center text-center relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-          <div className="absolute top-10 left-10 w-40 h-40 border-8 border-black rounded-full"></div>
-          <div className="absolute bottom-10 right-10 w-60 h-60 border-8 border-black rounded-full rotate-45"></div>
-        </div>
-        <h1 className="text-5xl md:text-8xl font-black text-black mb-4 uppercase italic leading-none z-10">
-          Dynasty <span className="text-zinc-800">Bridge</span>
-        </h1>
-        <p className="text-black font-bold max-w-2xl text-base md:text-xl opacity-90 z-10 mb-8">
-          MUMIAS' ULTIMATE ELECTRONICS & HOME HUB
-        </p>
-        <div className="flex gap-4 z-10 flex-wrap justify-center">
-          <button
-            onClick={() => {
-              setSelectedCategory('Televisions');
-              setSelectedSubcategory('');
-              document.getElementById('products-grid')?.scrollIntoView({ behavior: 'smooth' });
-            }}
-            className="bg-black text-white px-8 py-3 rounded-full font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform"
-          >
-            Shop TVs
-          </button>
-          <button
-            onClick={() => {
-              setSelectedCategory('Refrigerators');
-              setSelectedSubcategory('');
-              document.getElementById('products-grid')?.scrollIntoView({ behavior: 'smooth' });
-            }}
-            className="bg-white text-black px-8 py-3 rounded-full font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform border-2 border-black"
-          >
-            Home Appliances
-          </button>
-        </div>
-      </section>
+      {/* ── Main header ── */}
+      <header className="bg-white shadow-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+          {/* Logo */}
+          <Logo className="h-10 w-auto flex-shrink-0" />
 
-      <PromoFlyer products={allProducts} />
-
-      {/* Category Browser */}
-      <CategoryBrowser
-        selectedCategory={selectedCategory}
-        selectedSubcategory={selectedSubcategory}
-        onSelectCategory={(cat) => {
-          setSelectedCategory(cat);
-          setSelectedSubcategory('');
-          setSearchTerm('');
-        }}
-        onSelectSubcategory={(sub) => {
-          setSelectedSubcategory(sub);
-          setSearchTerm('');
-        }}
-        onClearFilters={handleClearFilters}
-        productCounts={productCounts}
-      />
-
-      {/* Main Products Grid */}
-      <main id="products-grid" className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 py-8">
-
-        {/* Quick-filter tabs */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-          <div className="flex flex-wrap gap-2">
-            {categoryTabs.map(cat => (
-              <button
-                key={cat}
-                onClick={() => {
-                  if (cat === 'All') {
-                    handleClearFilters();
-                    setSearchTerm('');
-                  } else {
-                    setSelectedCategory(cat);
-                    setSelectedSubcategory('');
-                    setSearchTerm('');
-                  }
-                }}
-                className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${
-                  (cat === 'All' && !selectedCategory && !selectedSubcategory && !searchTerm) ||
-                  (cat !== 'All' && selectedCategory === cat && !selectedSubcategory)
-                    ? 'bg-black text-white border-black'
-                    : 'bg-white text-zinc-600 border-zinc-200 hover:border-black'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-
-          <p className="text-zinc-400 text-xs font-medium uppercase tracking-widest whitespace-nowrap">
-            {searchTerm
-              ? `"${searchTerm}" — ${filteredProducts.length} result${filteredProducts.length !== 1 ? 's' : ''}`
-              : `${activeFilterLabel} · ${filteredProducts.length} item${filteredProducts.length !== 1 ? 's' : ''}`
-            }
-          </p>
-        </div>
-
-        {/* Loading state */}
-        {isLoading && allProducts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-12 h-12 border-4 border-mustard border-t-black rounded-full animate-spin"></div>
-            <p className="mt-4 text-zinc-500 font-medium">Loading Dynasty Mall...</p>
-          </div>
-        ) : filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {filteredProducts.map(p => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-20">
-            <p className="text-5xl mb-4">🔍</p>
-            <p className="text-zinc-500 font-medium">No products found.</p>
+          {/* Search bar */}
+          <div className="flex flex-1 rounded-sm overflow-hidden border-2 border-mustard">
+            <input
+              type="text"
+              placeholder="Search TVs, fridges, solar panels, speakers..."
+              className="flex-1 px-4 py-2.5 text-sm outline-none bg-white"
+              value={searchTerm}
+              onChange={e => { setSearchTerm(e.target.value); setSelectedCategory(''); setSelectedSubcategory(''); }}
+            />
             <button
-              onClick={() => { handleClearFilters(); setSearchTerm(''); }}
-              className="mt-4 text-xs font-bold underline text-zinc-400 hover:text-black"
+              className="bg-mustard px-5 py-2.5 font-bold flex items-center gap-2 hover:opacity-90 transition-opacity flex-shrink-0"
+              onClick={() => document.getElementById('products-grid')?.scrollIntoView({ behavior: 'smooth' })}
             >
-              Clear filters
+              <Search size={18} />
             </button>
           </div>
-        )}
-      </main>
 
-      {/* Footer */}
-      <footer className="bg-zinc-900 text-white py-12 px-6 mt-20">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12">
-          <div>
-            <Logo className="h-8 w-auto mb-6 bg-transparent" />
-            <p className="text-zinc-500 text-sm leading-relaxed">
-              Dynasty Bridge is Mumias' leading electronics hub. We deal in quality appliances, electronics, and home essentials with guaranteed durability and the best prices in town.
-            </p>
-          </div>
-          <div className="space-y-4">
-            <h4 className="font-bold uppercase tracking-widest text-xs text-zinc-400">Contact Us</h4>
-            <div className="flex items-center gap-3 text-sm text-zinc-300">
-              <Phone size={16} /> 0740930686
+          {/* Cart button */}
+          <button
+            onClick={() => setIsCartOpen(true)}
+            className="flex items-center gap-2 bg-zinc-900 text-white px-4 py-2.5 rounded-sm hover:bg-zinc-700 transition-colors flex-shrink-0"
+          >
+            <div className="relative">
+              <ShoppingCart size={20} />
+              {cart.length > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[9px] font-black h-4 w-4 rounded-full flex items-center justify-center">
+                  {cart.length}
+                </span>
+              )}
             </div>
-            <div className="flex items-center gap-3 text-sm text-zinc-300">
-              <MapPin size={16} /> Opposite Frankmatt Junction, Mumias Town
-            </div>
-          </div>
-          <div className="space-y-4">
-            <h4 className="font-bold uppercase tracking-widest text-xs text-zinc-400">Shop Location</h4>
-            <div className="w-full h-40 bg-zinc-800 rounded-xl overflow-hidden flex items-center justify-center text-xs text-zinc-600 italic">
-              Map view — Mumias Town
+            <span className="text-sm font-bold hidden sm:inline">Cart</span>
+          </button>
+        </div>
+
+        {/* ── Category nav bar ── */}
+        <div className="bg-zinc-800 border-t border-zinc-700">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex overflow-x-auto scrollbar-hide">
+              <button
+                onClick={clearFilters}
+                className={`flex items-center gap-1.5 whitespace-nowrap px-4 py-2.5 text-xs font-bold transition-colors flex-shrink-0 ${
+                  !selectedCategory ? 'bg-mustard text-black' : 'text-white hover:bg-zinc-700'
+                }`}
+              >
+                🏠 All
+              </button>
+              {CATEGORIES.map(cat => (
+                <button
+                  key={cat.name}
+                  onClick={() => handleCategorySelect(cat.name)}
+                  className={`flex items-center gap-1.5 whitespace-nowrap px-4 py-2.5 text-xs font-bold transition-colors flex-shrink-0 ${
+                    selectedCategory === cat.name ? 'bg-mustard text-black' : 'text-white hover:bg-zinc-700'
+                  }`}
+                >
+                  <span>{cat.icon}</span>
+                  <span>{cat.name}</span>
+                </button>
+              ))}
             </div>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto border-t border-zinc-800 mt-12 pt-8 text-center text-[10px] text-zinc-600 uppercase tracking-widest">
-          &copy; 2026 Dynasty Bridge. All rights reserved. Built for Mumias, Kakamega.
+      </header>
+
+      {/* ── Hero banner ── */}
+      <HeroBanner onShopCategory={handleCategorySelect} />
+
+      {/* ── Main content ── */}
+      <div className="max-w-7xl mx-auto w-full px-4 py-4 flex flex-col gap-4">
+
+        {/* Flash deals */}
+        {offerProducts.length > 0 && <FlashDeals products={offerProducts} />}
+
+        {/* ── Shop by Category grid ── */}
+        {!selectedCategory && !searchTerm && (
+          <div className="bg-white shadow-sm rounded-sm p-4">
+            <h2 className="font-black text-base mb-4 flex items-center gap-2">
+              <span className="w-1 h-5 bg-mustard rounded-full inline-block"></span>
+              Shop by Category
+            </h2>
+            <div className="grid grid-cols-5 sm:grid-cols-5 md:grid-cols-10 gap-2">
+              {CATEGORIES.map(cat => (
+                <button
+                  key={cat.name}
+                  onClick={() => handleCategorySelect(cat.name)}
+                  className="flex flex-col items-center gap-1.5 py-3 px-1 rounded hover:bg-amber-50 transition-colors group"
+                >
+                  <span className="text-3xl leading-none">{cat.icon}</span>
+                  <span className="text-[10px] text-center text-zinc-600 group-hover:text-black font-medium leading-tight">
+                    {cat.name}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Products section ── */}
+        <div id="products-grid" className="bg-white shadow-sm rounded-sm overflow-hidden">
+
+          {/* Section header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100">
+            <h2 className="font-black text-sm flex items-center gap-2">
+              <span className="w-1 h-5 bg-mustard rounded-full inline-block"></span>
+              {searchTerm
+                ? `Results for "${searchTerm}"`
+                : selectedCategory
+                ? selectedCategory
+                : 'All Products'}
+              <span className="text-zinc-400 font-normal text-xs">({filteredProducts.length})</span>
+            </h2>
+
+            <div className="flex items-center gap-2">
+              {/* Sort */}
+              <div className="flex items-center gap-1.5">
+                <SlidersHorizontal size={14} className="text-zinc-400" />
+                <select
+                  value={sortBy}
+                  onChange={e => setSortBy(e.target.value)}
+                  className="text-xs border border-zinc-200 rounded px-2 py-1 outline-none bg-white"
+                >
+                  {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </div>
+              {/* Clear */}
+              {(selectedCategory || searchTerm || sortBy !== 'default') && (
+                <button
+                  onClick={clearFilters}
+                  className="flex items-center gap-1 text-xs text-red-500 font-bold border border-red-200 rounded px-2 py-1 hover:bg-red-50"
+                >
+                  <X size={11} /> Clear
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Subcategory pills */}
+          {selectedCategory && subcategories.length > 0 && (
+            <div className="flex gap-2 px-4 py-2.5 border-b border-zinc-100 overflow-x-auto scrollbar-hide bg-zinc-50">
+              <button
+                onClick={() => setSelectedSubcategory('')}
+                className={`whitespace-nowrap px-3 py-1 rounded-full text-xs font-bold border transition-colors flex-shrink-0 ${
+                  !selectedSubcategory ? 'bg-mustard text-black border-mustard' : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-400'
+                }`}
+              >
+                All {selectedCategory}
+              </button>
+              {subcategories.map(sub => (
+                <button
+                  key={sub.name}
+                  onClick={() => setSelectedSubcategory(sub.name)}
+                  className={`whitespace-nowrap px-3 py-1 rounded-full text-xs font-bold border transition-colors flex-shrink-0 ${
+                    selectedSubcategory === sub.name ? 'bg-black text-white border-black' : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-400'
+                  }`}
+                >
+                  {sub.name}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Product grid */}
+          {isLoading && allProducts.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24">
+              <div className="w-10 h-10 border-4 border-mustard border-t-transparent rounded-full animate-spin mb-4"></div>
+              <p className="text-zinc-400 text-sm">Loading products...</p>
+            </div>
+          ) : filteredProducts.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-px bg-zinc-100">
+              {filteredProducts.map(p => <ProductCard key={p.id} product={p} />)}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-24 text-zinc-400">
+              <span className="text-5xl mb-4">🔍</span>
+              <p className="font-medium mb-2">No products found</p>
+              <button onClick={clearFilters} className="text-xs text-mustard font-bold underline">
+                Clear filters
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Footer ── */}
+      <footer className="bg-zinc-900 text-white mt-8 py-10 px-4">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
+          <div>
+            <Logo className="h-8 w-auto mb-4" />
+            <p className="text-zinc-400 text-sm leading-relaxed">
+              Mumias' leading electronics & home appliances hub. Quality products, best prices.
+            </p>
+          </div>
+          <div className="space-y-3">
+            <h4 className="font-bold uppercase text-xs tracking-widest text-zinc-400">Contact</h4>
+            <div className="flex items-center gap-2 text-sm text-zinc-300"><Phone size={14} /> 0740930686</div>
+            <div className="flex items-center gap-2 text-sm text-zinc-300"><MapPin size={14} /> Opposite Frankmatt Junction, Mumias</div>
+          </div>
+          <div className="space-y-3">
+            <h4 className="font-bold uppercase text-xs tracking-widest text-zinc-400">Categories</h4>
+            <div className="grid grid-cols-2 gap-1">
+              {CATEGORIES.slice(0, 8).map(cat => (
+                <button
+                  key={cat.name}
+                  onClick={() => { handleCategorySelect(cat.name); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  className="text-xs text-zinc-400 hover:text-mustard text-left transition-colors"
+                >
+                  {cat.icon} {cat.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto border-t border-zinc-800 mt-8 pt-6 text-center text-[10px] text-zinc-600 uppercase tracking-widest">
+          © 2026 Dynasty Bridge. All rights reserved. Mumias, Kakamega.
         </div>
       </footer>
 
