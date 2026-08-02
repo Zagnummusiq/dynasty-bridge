@@ -70,21 +70,6 @@ app.post('/api/orders', async (req, res) => {
   }
 });
 
-// Admin - Force Seed (TEMPORARY)
-app.get('/api/admin/force-seed', async (req, res) => {
-  try {
-    const { exec } = require('child_process');
-    exec('node init_db.js', (error, stdout, stderr) => {
-      if (error) {
-        return res.status(500).json({ error: error.message, stderr });
-      }
-      res.json({ message: 'Seed triggered', stdout, stderr });
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 app.listen(port, '0.0.0.0', () => {
   console.log(`Dynasty Bridge API running on port ${port}`);
 });
