@@ -3,11 +3,13 @@
 @layer base {
   body {
     @apply bg-zinc-50 text-zinc-900;
+    font-family: 'Montserrat', sans-serif;
   }
 }
 
 @theme {
-  --color-mustard: #FFDB58;
+  --color-brand-navy: #051025;
+  --color-brand-blue: #0A1F44;
 }
 
 .artistic-s {

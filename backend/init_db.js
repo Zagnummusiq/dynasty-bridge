@@ -13,24 +13,74 @@ const EXTERNAL_PRODUCTS_URL = 'https://kolzsticks.github.io/Free-Ecommerce-Produ
 
 const manualProducts = [
   {
+    name: "Royal Sound RS-200 Multimedia Subwoofer",
+    category: "Home Audio",
+    description: "3.1 Channel Multimedia Speaker System, High Bass, Bluetooth/USB/FM",
+    price: 8500.00,
+    image_url: "/products/subwoofer-1.jpg",
+    stock_quantity: 15,
+    is_on_offer: true,
+    discount_percentage: 10
+  },
+  {
+    name: "Dynasty X-Bass 3.1 Subwoofer System",
+    category: "Home Audio",
+    description: "Premium X-Bass technology, LED Display, Remote Control",
+    price: 9200.00,
+    image_url: "/products/subwoofer-2.jpg",
+    stock_quantity: 12,
+    is_on_offer: false,
+    discount_percentage: 0
+  },
+  {
+    name: "Supreme Audio S-500 Multimedia Speaker",
+    category: "Home Audio",
+    description: "5.1 Virtual Surround Sound, Powerful Bass, Wireless Connectivity",
+    price: 9800.00,
+    image_url: "/products/subwoofer-3.jpg",
+    stock_quantity: 8,
+    is_on_offer: true,
+    discount_percentage: 5
+  },
+  {
+    name: "Dynasty Smart LED TV 32\"",
+    category: "TVs",
+    description: "32 Inch Smart Android LED TV, Netflix/YouTube, Narrow Bezel",
+    price: 16500.00,
+    image_url: "/products/tv-1.jpg",
+    stock_quantity: 10,
+    is_on_offer: true,
+    discount_percentage: 12
+  },
+  {
+    name: "Dynasty 4K Ultra HD Smart TV 43\"",
+    category: "TVs",
+    description: "43 Inch 4K UHD Smart TV, HDR10, Frameless Design",
+    price: 28500.00,
+    image_url: "/products/tv-2.jpg",
+    stock_quantity: 6,
+    is_on_offer: false,
+    discount_percentage: 0
+  },
+  {
+    name: "Sony 55\" 4K HDR Google TV",
+    category: "TVs",
+    description: "Premium 55 Inch 4K Display, Google TV, Immersive Sound",
+    price: 64000.00,
+    image_url: "/products/tv-1.jpg",
+    stock_quantity: 4,
+    is_on_offer: true,
+    discount_percentage: 8
+  },
+  {
     name: "Pioneer TS-W3020PRO Samurai Subwoofer",
     category: "Car Audio Systems",
     description: "12 Inch, 3500W Max Power, Dual 4-Ohm",
     price: 12500.00,
-    image_url: "https://images.jumia.co.ke/unsafe/fit-in/500x500/filters:fill(white)/product/12/345678/1.jpg",
+    image_url: "https://images.jumia.co.ke/unsafe/fit-in/500x500/filters:fill(white)/product/12/345678/1.1.jpg",
     stock_quantity: 10,
     is_on_offer: true,
     discount_percentage: 15
-  },
-  {
-    name: "Sony Bravia 55-Inch 4K UHD Smart TV",
-    category: "TVs",
-    description: "55 Inch, 4K UHD, Smart Android TV, HDR",
-    price: 68000.00,
-    image_url: "https://images.jumia.co.ke/unsafe/fit-in/500x500/filters:fill(white)/product/87/116461/1.jpg",
-    stock_quantity: 5,
-    is_on_offer: true,
-    discount_percentage: 10
   }
 ];
 

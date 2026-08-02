@@ -56,7 +56,10 @@ const App: React.FC = () => {
   useEffect(() => {
     let filtered = products;
     if (searchTerm) {
-      filtered = filtered.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+      filtered = filtered.filter(p => 
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.category.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
     if (selectedCategory !== 'All') {
       filtered = filtered.filter(p => p.category === selectedCategory);
@@ -64,33 +67,47 @@ const App: React.FC = () => {
     setFilteredProducts(filtered);
   }, [searchTerm, selectedCategory, products]);
 
+  const handleCategoryClick = (cat: string) => {
+    setSelectedCategory(cat);
+    // Smooth scroll to the products grid
+    const grid = document.getElementById('products-grid');
+    if (grid) {
+      const navHeight = 80; // approximate height of sticky nav
+      const elementPosition = grid.getBoundingClientRect().top + window.pageYOffset;
+      window.scrollTo({
+        top: elementPosition - navHeight,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   const categories = ['All', ...new Set(products.map(p => p.category))];
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-zinc-50">
       {/* Top Header */}
-      <header className="bg-black text-white py-2 px-6 flex justify-between items-center text-[10px] uppercase tracking-widest font-bold">
+      <header className="bg-brand-navy text-white/60 py-2 px-6 flex justify-between items-center text-[10px] uppercase tracking-widest font-bold border-b border-white/5">
         <div className="flex items-center gap-4">
           <ShopStatus />
           <span className="hidden md:inline">📍 Mumias, opposite Frankmatt Junction</span>
         </div>
         <div className="flex items-center gap-4">
-          <a href="tel:0740930686" className="flex items-center gap-1 hover:text-mustard">
+          <a href="tel:0740930686" className="flex items-center gap-1 hover:text-white transition-colors">
             <Phone size={10} /> Hotline: 0740930686
           </a>
         </div>
       </header>
 
       {/* Main Navbar */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-100 px-6 py-4 flex justify-between items-center">
+      <nav className="sticky top-0 z-50 bg-brand-navy border-b border-white/10 px-6 py-4 flex justify-between items-center">
         <div className="flex items-center gap-8">
           <Logo className="h-10 w-auto" />
-          <div className="hidden lg:flex items-center bg-zinc-100 rounded-full px-4 py-2 w-96">
-            <Search size={18} className="text-zinc-400" />
+          <div className="hidden lg:flex items-center bg-white/10 rounded-full px-4 py-2 w-96 border border-white/5 focus-within:border-white/20 transition-colors">
+            <Search size={18} className="text-white/40" />
             <input
               type="text"
-              placeholder="Search smart TVs, fridges, gas..."
-              className="bg-transparent border-none focus:ring-0 text-sm ml-2 w-full"
+              placeholder="Search smart TVs, subwoofers, fridges..."
+              className="bg-transparent border-none focus:ring-0 text-sm ml-2 w-full text-white placeholder:text-white/30"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -100,11 +117,11 @@ const App: React.FC = () => {
         <div className="flex items-center gap-6">
           <button
             onClick={() => setIsCartOpen(true)}
-            className="relative p-2 hover:bg-zinc-100 rounded-full transition-colors"
+            className="relative p-2 hover:bg-white/10 rounded-full transition-colors text-white"
           >
             <ShoppingCart size={24} />
             {cart.length > 0 && (
-              <span className="absolute top-0 right-0 bg-mustard text-black text-[10px] font-bold h-5 w-5 rounded-full flex items-center justify-center border-2 border-white">
+              <span className="absolute top-0 right-0 bg-white text-brand-navy text-[10px] font-bold h-5 w-5 rounded-full flex items-center justify-center border-2 border-brand-navy">
                 {cart.length}
               </span>
             )}
@@ -113,22 +130,22 @@ const App: React.FC = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="bg-mustard py-16 px-6 flex flex-col items-center text-center relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-          <div className="absolute top-10 left-10 w-40 h-40 border-8 border-black rounded-full"></div>
-          <div className="absolute bottom-10 right-10 w-60 h-60 border-8 border-black rounded-full rotate-45"></div>
+      <section className="bg-brand-navy py-16 px-6 flex flex-col items-center text-center relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none">
+          <div className="absolute top-10 left-10 w-40 h-40 border-8 border-white rounded-full"></div>
+          <div className="absolute bottom-10 right-10 w-60 h-60 border-8 border-white rounded-full rotate-45"></div>
         </div>
-        <h1 className="text-5xl md:text-8xl font-black text-black mb-4 uppercase italic leading-none z-10">
-          Dynasty <span className="text-zinc-800">Bridge</span>
+        <h1 className="text-5xl md:text-8xl font-black text-white mb-4 uppercase italic leading-none z-10">
+          Dynasty <span className="text-white/40">Bridge</span>
         </h1>
-        <p className="text-black font-bold max-w-2xl text-base md:text-xl opacity-90 z-10 mb-8">
+        <p className="text-white/80 font-bold max-w-2xl text-base md:text-xl z-10 mb-8 uppercase tracking-[0.2em]">
           MUMIAS' ULTIMATE ELECTRONICS & HOME HUB
         </p>
         <div className="flex gap-4 z-10">
-          <button className="bg-black text-white px-8 py-3 rounded-full font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform">
-            Shop TVs
+          <button className="bg-white text-brand-navy px-8 py-3 rounded-full font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform shadow-lg shadow-white/5">
+            Shop Smart TVs
           </button>
-          <button className="bg-white text-black px-8 py-3 rounded-full font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform border-2 border-black">
+          <button className="bg-transparent text-white px-8 py-3 rounded-full font-bold uppercase tracking-widest text-sm hover:bg-white/10 transition-colors border-2 border-white/20">
             Home Appliances
           </button>
         </div>
@@ -138,20 +155,25 @@ const App: React.FC = () => {
 
       {/* Dynamic Shop by Category */}
       <section className="max-w-7xl mx-auto w-full px-6 py-12">
-        <h2 className="text-2xl font-black uppercase tracking-tight mb-8">Shop by Category</h2>
+        <h2 className="text-2xl font-black uppercase tracking-tight mb-8">Shop by Department</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {categories.filter(c => c !== 'All').map((cat) => (
             <div 
               key={cat} 
-              onClick={() => {
-                setSelectedCategory(cat);
-                document.getElementById('products-grid')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="group cursor-pointer bg-zinc-100 rounded-2xl p-6 hover:bg-mustard transition-all overflow-hidden relative"
+              onClick={() => handleCategoryClick(cat)}
+              className={`group cursor-pointer rounded-2xl p-6 transition-all overflow-hidden relative border shadow-sm hover:shadow-xl ${
+                selectedCategory === cat 
+                  ? 'bg-brand-navy border-brand-navy' 
+                  : 'bg-white border-zinc-100 hover:border-brand-navy'
+              }`}
             >
-              <h3 className="font-bold text-lg group-hover:text-black">{cat}</h3>
-              <p className="text-xs text-zinc-500 group-hover:text-black/60 uppercase font-bold tracking-widest mt-1">Explore Range</p>
-              <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-black/5 rounded-full group-hover:scale-150 transition-transform"></div>
+              <h3 className={`font-bold text-lg transition-colors ${
+                selectedCategory === cat ? 'text-white' : 'group-hover:text-white'
+              }`}>{cat}</h3>
+              <p className={`text-xs uppercase font-bold tracking-widest mt-1 transition-colors ${
+                selectedCategory === cat ? 'text-white/60' : 'text-zinc-500 group-hover:text-white/60'
+              }`}>Explore Range</p>
+              <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-brand-navy/5 rounded-full group-hover:scale-150 group-hover:bg-white/5 transition-all"></div>
             </div>
           ))}
         </div>
@@ -161,8 +183,8 @@ const App: React.FC = () => {
       <main id="products-grid" className="flex-grow max-w-7xl mx-auto w-full px-6 py-8">
         {isLoading && products.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-12 h-12 border-4 border-mustard border-t-black rounded-full animate-spin"></div>
-            <p className="mt-4 text-zinc-500 font-medium">Loading Dynasty Mall...</p>
+            <div className="w-12 h-12 border-4 border-brand-navy border-t-zinc-200 rounded-full animate-spin"></div>
+            <p className="mt-4 text-zinc-500 font-medium italic">Loading Dynasty Mall...</p>
           </div>
         ) : (
           <>
@@ -171,11 +193,11 @@ const App: React.FC = () => {
             {categories.map(cat => (
               <button
                 key={cat}
-                onClick={() => setSelectedCategory(cat)}
+                onClick={() => handleCategoryClick(cat)}
                 className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${
                   selectedCategory === cat
-                    ? 'bg-black text-white border-black'
-                    : 'bg-white text-zinc-600 border-zinc-200 hover:border-black'
+                    ? 'bg-brand-navy text-white border-brand-navy'
+                    : 'bg-white text-zinc-600 border-zinc-200 hover:border-brand-navy'
                 }`}
               >
                 {cat}

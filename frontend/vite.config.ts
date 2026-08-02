@@ -13,19 +13,15 @@ export default defineConfig({
         name: 'Dynasty Bridge Online Mall',
         short_name: 'Dynasty Bridge',
         description: 'Modern electronics and home appliances mall in Mumias, Kenya.',
-        theme_color: '#FFDB58',
-        background_color: '#ffffff',
+        theme_color: '#051025',
+        background_color: '#051025',
         display: 'standalone',
         icons: [
           {
-            src: 'pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png'
+            src: 'icons.svg',
+            sizes: 'any',
+            type: 'image/svg+xml',
+            purpose: 'any maskable'
           }
         ]
       }
