@@ -5,7 +5,7 @@ services:
     rootDir: backend
     plan: free
     buildCommand: npm install
-    startCommand: node index.js
+    startCommand: node init_db.js && node index.js
     envVars:
       - key: PORT
         value: 10000
