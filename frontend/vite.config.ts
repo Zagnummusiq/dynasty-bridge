@@ -23,29 +23,19 @@ export default defineConfig({
       manifest: {
         name: 'Dynasty Bridge Online Mall',
         short_name: 'Dynasty Bridge',
-        description: 'Mumias\' leading electronics & home appliances mall.',
-        theme_color: '#FFDB58',
-        background_color: '#ffffff',
+        description: 'Modern electronics and home appliances mall in Mumias, Kenya.',
+        theme_color: '#051025',
+        background_color: '#051025',
         display: 'standalone',
         start_url: '/',
         scope: '/',
         icons: [
           {
-            src: 'pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png',
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any maskable',
-          },
+            src: 'icons.svg',
+            sizes: 'any',
+            type: 'image/svg+xml',
+            purpose: 'any maskable'
+          }
         ],
       },
       workbox: {

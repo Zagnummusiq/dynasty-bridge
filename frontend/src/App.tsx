@@ -110,11 +110,20 @@ const App: React.FC = () => {
     setSelectedCategory(cat);
     setSelectedSubcategory('');
     setSearchTerm('');
-    document.getElementById('products-grid')?.scrollIntoView({ behavior: 'smooth' });
+    // Smooth scroll to the products grid
+    const grid = document.getElementById('products-grid');
+    if (grid) {
+      const navHeight = 120; // approximate height of sticky nav
+      const elementPosition = grid.getBoundingClientRect().top + window.pageYOffset;
+      window.scrollTo({
+        top: elementPosition - navHeight,
+        behavior: 'smooth'
+      });
+    }
   };
 
   return (
-    <div className="min-h-screen bg-zinc-100 flex flex-col">
+    <div className="min-h-screen bg-zinc-50 flex flex-col font-['Montserrat']">
 
       {/* ── Offline banner ── */}
       {isOffline && (
@@ -124,66 +133,63 @@ const App: React.FC = () => {
       )}
 
       {/* ── Announcement bar ── */}
-      <div className="bg-zinc-900 text-white text-[11px] py-1.5 px-4 hidden md:block">
+      <div className="bg-brand-navy text-white/60 text-[11px] py-2 px-6 border-b border-white/5 uppercase tracking-widest font-bold">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
             <ShopStatus />
-            <span className="flex items-center gap-1"><MapPin size={10} /> Mumias, opposite Frankmatt Junction</span>
+            <span className="hidden md:flex items-center gap-1"><MapPin size={10} /> Mumias, opposite Frankmatt Junction</span>
           </div>
-          <a href="tel:0740930686" className="flex items-center gap-1 hover:text-mustard transition-colors">
+          <a href="tel:0740930686" className="flex items-center gap-1 hover:text-white transition-colors">
             <Phone size={10} /> 0740930686
           </a>
         </div>
       </div>
 
       {/* ── Main header ── */}
-      <header className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4">
+      <header className="bg-brand-navy shadow-lg sticky top-0 z-50 border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center gap-8">
           {/* Logo */}
           <Logo className="h-10 w-auto flex-shrink-0" />
 
           {/* Search bar */}
-          <div className="flex flex-1 rounded-sm overflow-hidden border-2 border-mustard">
+          <div className="hidden lg:flex flex-1 items-center bg-white/10 rounded-full px-4 py-2 border border-white/5 focus-within:border-white/20 transition-colors">
+            <Search size={18} className="text-white/40" />
             <input
               type="text"
-              placeholder="Search TVs, fridges, solar panels, speakers..."
-              className="flex-1 px-4 py-2.5 text-sm outline-none bg-white"
+              placeholder="Search smart TVs, subwoofers, fridges..."
+              className="bg-transparent border-none focus:ring-0 text-sm ml-2 w-full text-white placeholder:text-white/30"
               value={searchTerm}
               onChange={e => { setSearchTerm(e.target.value); setSelectedCategory(''); setSelectedSubcategory(''); }}
             />
-            <button
-              className="bg-mustard px-5 py-2.5 font-bold flex items-center gap-2 hover:opacity-90 transition-opacity flex-shrink-0"
-              onClick={() => document.getElementById('products-grid')?.scrollIntoView({ behavior: 'smooth' })}
-            >
-              <Search size={18} />
-            </button>
           </div>
+
+          {/* Mobile Search button */}
+          <button className="lg:hidden text-white/60 p-2" onClick={() => document.getElementById('products-grid')?.scrollIntoView({ behavior: 'smooth' })}>
+            <Search size={24} />
+          </button>
 
           {/* Cart button */}
           <button
             onClick={() => setIsCartOpen(true)}
-            className="flex items-center gap-2 bg-zinc-900 text-white px-4 py-2.5 rounded-sm hover:bg-zinc-700 transition-colors flex-shrink-0"
+            className="relative p-2 hover:bg-white/10 rounded-full transition-colors text-white"
           >
-            <div className="relative">
-              <ShoppingCart size={20} />
-              {cart.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[9px] font-black h-4 w-4 rounded-full flex items-center justify-center">
-                  {cart.length}
-                </span>
-              )}
-            </div>
-            <span className="text-sm font-bold hidden sm:inline">Cart</span>
+            <ShoppingCart size={24} />
+            {cart.length > 0 && (
+              <span className="absolute top-0 right-0 bg-white text-brand-navy text-[10px] font-bold h-5 w-5 rounded-full flex items-center justify-center border-2 border-brand-navy">
+                {cart.length}
+              </span>
+            )}
           </button>
         </div>
 
         {/* ── Category nav bar ── */}
-        <div className="bg-zinc-800 border-t border-zinc-700">
+        <div className="bg-brand-blue/50 backdrop-blur-md border-t border-white/5">
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex overflow-x-auto scrollbar-hide">
               <button
                 onClick={clearFilters}
-                className={`flex items-center gap-1.5 whitespace-nowrap px-4 py-2.5 text-xs font-bold transition-colors flex-shrink-0 ${
-                  !selectedCategory ? 'bg-mustard text-black' : 'text-white hover:bg-zinc-700'
+                className={`flex items-center gap-1.5 whitespace-nowrap px-4 py-3 text-[10px] uppercase tracking-widest font-bold transition-colors flex-shrink-0 ${
+                  !selectedCategory ? 'text-white border-b-2 border-white' : 'text-white/40 hover:text-white'
                 }`}
               >
                 🏠 All
@@ -192,8 +198,8 @@ const App: React.FC = () => {
                 <button
                   key={cat.name}
                   onClick={() => handleCategorySelect(cat.name)}
-                  className={`flex items-center gap-1.5 whitespace-nowrap px-4 py-2.5 text-xs font-bold transition-colors flex-shrink-0 ${
-                    selectedCategory === cat.name ? 'bg-mustard text-black' : 'text-white hover:bg-zinc-700'
+                  className={`flex items-center gap-1.5 whitespace-nowrap px-4 py-3 text-[10px] uppercase tracking-widest font-bold transition-colors flex-shrink-0 ${
+                    selectedCategory === cat.name ? 'text-white border-b-2 border-white' : 'text-white/40 hover:text-white'
                   }`}
                 >
                   <span>{cat.icon}</span>
@@ -209,58 +215,55 @@ const App: React.FC = () => {
       <HeroBanner onShopCategory={handleCategorySelect} />
 
       {/* ── Main content ── */}
-      <div className="max-w-7xl mx-auto w-full px-4 py-4 flex flex-col gap-4">
+      <div className="max-w-7xl mx-auto w-full px-6 py-12 flex flex-col gap-12">
 
         {/* Flash deals */}
         {offerProducts.length > 0 && <FlashDeals products={offerProducts} />}
 
-        {/* ── Shop by Category grid ── */}
+        {/* ── Shop by Department grid ── */}
         {!selectedCategory && !searchTerm && (
-          <div className="bg-white shadow-sm rounded-sm p-4">
-            <h2 className="font-black text-base mb-4 flex items-center gap-2">
-              <span className="w-1 h-5 bg-mustard rounded-full inline-block"></span>
-              Shop by Category
-            </h2>
-            <div className="grid grid-cols-5 sm:grid-cols-5 md:grid-cols-10 gap-2">
+          <section>
+            <h2 className="text-2xl font-black uppercase tracking-tight mb-8">Shop by Department</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {CATEGORIES.map(cat => (
-                <button
-                  key={cat.name}
+                <div 
+                  key={cat.name} 
                   onClick={() => handleCategorySelect(cat.name)}
-                  className="flex flex-col items-center gap-1.5 py-3 px-1 rounded hover:bg-amber-50 transition-colors group"
+                  className="group cursor-pointer bg-white rounded-2xl p-6 transition-all overflow-hidden relative border border-zinc-100 hover:border-brand-navy shadow-sm hover:shadow-xl hover:-translate-y-1"
                 >
-                  <span className="text-3xl leading-none">{cat.icon}</span>
-                  <span className="text-[10px] text-center text-zinc-600 group-hover:text-black font-medium leading-tight">
-                    {cat.name}
-                  </span>
-                </button>
+                  <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">{cat.icon}</div>
+                  <h3 className="font-bold text-lg group-hover:text-brand-navy transition-colors">{cat.name}</h3>
+                  <p className="text-xs text-zinc-500 uppercase font-bold tracking-widest mt-1">Explore Range</p>
+                  <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-brand-navy/5 rounded-full group-hover:scale-150 transition-all"></div>
+                </div>
               ))}
             </div>
-          </div>
+          </section>
         )}
 
         {/* ── Products section ── */}
-        <div id="products-grid" className="bg-white shadow-sm rounded-sm overflow-hidden">
+        <div id="products-grid" className="scroll-mt-32">
 
           {/* Section header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-100">
-            <h2 className="font-black text-sm flex items-center gap-2">
-              <span className="w-1 h-5 bg-mustard rounded-full inline-block"></span>
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8">
+            <h2 className="text-2xl font-black uppercase tracking-tight flex items-center gap-3">
+              <span className="w-2 h-8 bg-brand-navy rounded-full inline-block"></span>
               {searchTerm
                 ? `Results for "${searchTerm}"`
                 : selectedCategory
                 ? selectedCategory
                 : 'All Products'}
-              <span className="text-zinc-400 font-normal text-xs">({filteredProducts.length})</span>
+              <span className="text-zinc-400 font-bold text-sm tracking-widest">[{filteredProducts.length}]</span>
             </h2>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4">
               {/* Sort */}
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-full border border-zinc-200">
                 <SlidersHorizontal size={14} className="text-zinc-400" />
                 <select
                   value={sortBy}
                   onChange={e => setSortBy(e.target.value)}
-                  className="text-xs border border-zinc-200 rounded px-2 py-1 outline-none bg-white"
+                  className="text-xs font-bold uppercase tracking-widest outline-none bg-transparent cursor-pointer"
                 >
                   {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
@@ -269,9 +272,9 @@ const App: React.FC = () => {
               {(selectedCategory || searchTerm || sortBy !== 'default') && (
                 <button
                   onClick={clearFilters}
-                  className="flex items-center gap-1 text-xs text-red-500 font-bold border border-red-200 rounded px-2 py-1 hover:bg-red-50"
+                  className="flex items-center gap-2 text-xs text-red-500 font-bold uppercase tracking-widest border border-red-100 bg-red-50 px-4 py-2 rounded-full hover:bg-red-100 transition-colors"
                 >
-                  <X size={11} /> Clear
+                  <X size={14} /> Clear
                 </button>
               )}
             </div>
@@ -279,11 +282,11 @@ const App: React.FC = () => {
 
           {/* Subcategory pills */}
           {selectedCategory && subcategories.length > 0 && (
-            <div className="flex gap-2 px-4 py-2.5 border-b border-zinc-100 overflow-x-auto scrollbar-hide bg-zinc-50">
+            <div className="flex gap-2 mb-8 overflow-x-auto scrollbar-hide pb-2">
               <button
                 onClick={() => setSelectedSubcategory('')}
-                className={`whitespace-nowrap px-3 py-1 rounded-full text-xs font-bold border transition-colors flex-shrink-0 ${
-                  !selectedSubcategory ? 'bg-mustard text-black border-mustard' : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-400'
+                className={`whitespace-nowrap px-6 py-2 rounded-full text-[10px] uppercase tracking-widest font-bold border transition-all flex-shrink-0 ${
+                  !selectedSubcategory ? 'bg-brand-navy text-white border-brand-navy shadow-lg shadow-brand-navy/20' : 'bg-white text-zinc-600 border-zinc-200 hover:border-brand-navy'
                 }`}
               >
                 All {selectedCategory}
@@ -292,8 +295,8 @@ const App: React.FC = () => {
                 <button
                   key={sub.name}
                   onClick={() => setSelectedSubcategory(sub.name)}
-                  className={`whitespace-nowrap px-3 py-1 rounded-full text-xs font-bold border transition-colors flex-shrink-0 ${
-                    selectedSubcategory === sub.name ? 'bg-black text-white border-black' : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-400'
+                  className={`whitespace-nowrap px-6 py-2 rounded-full text-[10px] uppercase tracking-widest font-bold border transition-all flex-shrink-0 ${
+                    selectedSubcategory === sub.name ? 'bg-brand-navy text-white border-brand-navy shadow-lg shadow-brand-navy/20' : 'bg-white text-zinc-600 border-zinc-200 hover:border-brand-navy'
                   }`}
                 >
                   {sub.name}
@@ -305,19 +308,20 @@ const App: React.FC = () => {
           {/* Product grid */}
           {isLoading && allProducts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24">
-              <div className="w-10 h-10 border-4 border-mustard border-t-transparent rounded-full animate-spin mb-4"></div>
-              <p className="text-zinc-400 text-sm">Loading products...</p>
+              <div className="w-12 h-12 border-4 border-brand-navy border-t-zinc-200 rounded-full animate-spin mb-4"></div>
+              <p className="text-zinc-500 font-medium italic">Loading Dynasty Mall...</p>
             </div>
           ) : filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-px bg-zinc-100">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {filteredProducts.map(p => <ProductCard key={p.id} product={p} />)}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-24 text-zinc-400">
-              <span className="text-5xl mb-4">🔍</span>
-              <p className="font-medium mb-2">No products found</p>
-              <button onClick={clearFilters} className="text-xs text-mustard font-bold underline">
-                Clear filters
+            <div className="flex flex-col items-center justify-center py-32 bg-white rounded-3xl border border-dashed border-zinc-200">
+              <span className="text-6xl mb-6">🔍</span>
+              <p className="text-xl font-bold text-zinc-900 mb-2">No products found</p>
+              <p className="text-zinc-500 mb-6">Try adjusting your filters or search terms</p>
+              <button onClick={clearFilters} className="bg-brand-navy text-white px-8 py-3 rounded-full font-bold uppercase tracking-widest text-sm hover:scale-105 transition-transform">
+                Browse All Products
               </button>
             </div>
           )}
@@ -325,36 +329,42 @@ const App: React.FC = () => {
       </div>
 
       {/* ── Footer ── */}
-      <footer className="bg-zinc-900 text-white mt-8 py-10 px-4">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
+      <footer className="bg-brand-navy text-white mt-20 py-16 px-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-16">
           <div>
-            <Logo className="h-8 w-auto mb-4" />
-            <p className="text-zinc-400 text-sm leading-relaxed">
-              Mumias' leading electronics & home appliances hub. Quality products, best prices.
+            <Logo className="h-8 w-auto mb-8" />
+            <p className="text-white/40 text-sm leading-relaxed max-w-sm">
+              Dynasty Bridge is Mumias' leading electronics hub. We deal in quality appliances, electronics, and home essentials with guaranteed durability and the best prices in town.
             </p>
           </div>
-          <div className="space-y-3">
-            <h4 className="font-bold uppercase text-xs tracking-widest text-zinc-400">Contact</h4>
-            <div className="flex items-center gap-2 text-sm text-zinc-300"><Phone size={14} /> 0740930686</div>
-            <div className="flex items-center gap-2 text-sm text-zinc-300"><MapPin size={14} /> Opposite Frankmatt Junction, Mumias</div>
+          <div className="space-y-6">
+            <h4 className="font-bold uppercase text-xs tracking-[0.3em] text-white/30">Contact Us</h4>
+            <div className="flex items-center gap-4 text-sm text-white/80 hover:text-white transition-colors cursor-pointer">
+              <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center"><Phone size={18} /></div>
+              0740930686
+            </div>
+            <div className="flex items-center gap-4 text-sm text-white/80 hover:text-white transition-colors cursor-pointer">
+              <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center"><MapPin size={18} /></div>
+              Opposite Frankmatt Junction, Mumias
+            </div>
           </div>
-          <div className="space-y-3">
-            <h4 className="font-bold uppercase text-xs tracking-widest text-zinc-400">Categories</h4>
-            <div className="grid grid-cols-2 gap-1">
+          <div className="space-y-6">
+            <h4 className="font-bold uppercase text-xs tracking-[0.3em] text-white/30">Top Departments</h4>
+            <div className="grid grid-cols-2 gap-y-3 gap-x-8">
               {CATEGORIES.slice(0, 8).map(cat => (
                 <button
                   key={cat.name}
                   onClick={() => { handleCategorySelect(cat.name); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                  className="text-xs text-zinc-400 hover:text-mustard text-left transition-colors"
+                  className="text-xs text-white/50 hover:text-white text-left transition-colors font-bold uppercase tracking-widest"
                 >
-                  {cat.icon} {cat.name}
+                  {cat.name}
                 </button>
               ))}
             </div>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto border-t border-zinc-800 mt-8 pt-6 text-center text-[10px] text-zinc-600 uppercase tracking-widest">
-          © 2026 Dynasty Bridge. All rights reserved. Mumias, Kakamega.
+        <div className="max-w-7xl mx-auto border-t border-white/5 mt-16 pt-10 text-center text-[10px] text-white/20 uppercase tracking-[0.4em] font-bold">
+          © 2026 Dynasty Bridge. All rights reserved. Built for Mumias Kakamega.
         </div>
       </footer>
 

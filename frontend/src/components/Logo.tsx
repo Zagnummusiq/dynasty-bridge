@@ -2,23 +2,16 @@ import React from 'react';
 
 const Logo: React.FC<{ className?: string }> = ({ className }) => {
   return (
-    <div className={`relative flex items-center justify-center bg-mustard p-4 rounded-lg ${className}`}>
-      <svg width="200" height="100" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
-        {/* DYNASTY Text */}
-        <text x="10" y="40" className="font-bold fill-black" style={{ fontSize: '24px', letterSpacing: '2px' }}>
-          DYNA
-          <tspan className="italic" style={{ fontSize: '42px' }} dy="6px">S</tspan>
-          <tspan dy="-6px">TY</tspan>
-        </text>
-        
-        {/* BRIDGE Text starting below 'N' of DYNASTY */}
-        <text x="68" y="75" className="fill-black" style={{ fontSize: '24px', fontFamily: '"Brush Script MT", cursive' }}>
-          Bridge
-        </text>
-        
-        {/* Bridge graphic under Dynasty */}
-        <path d="M 10 50 Q 100 80 190 50" fill="none" stroke="black" strokeWidth="2" />
+    <div className={`flex items-center gap-2 ${className}`}>
+      <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" className="text-white fill-current">
+        {/* Bridge Icon */}
+        <path d="M5 30 V20 Q20 10 35 20 V30 H32 V22 Q20 15 8 22 V30 Z" />
+        <rect x="18" y="25" width="4" height="5" />
       </svg>
+      <div className="flex flex-col leading-none">
+        <span className="text-white font-black text-xl tracking-tighter uppercase">Dynasty</span>
+        <span className="text-white/80 font-bold text-xs tracking-[0.2em] uppercase -mt-1">Bridge</span>
+      </div>
     </div>
   );
 };
