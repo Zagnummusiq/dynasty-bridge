@@ -74,7 +74,7 @@ const CategoryBrowser: React.FC<Props> = ({
               className={`group relative text-left rounded-2xl p-4 border-2 transition-all duration-200 ${
                 isActive
                   ? 'bg-black text-white border-black shadow-lg scale-[1.02]'
-                  : `bg-white border-zinc-100 hover:border-zinc-300 hover:shadow-md ${cat.accent}`
+                  : `bg-white border-zinc-100 hover:border-zinc-300 hover:shadow-md`
               }`}
             >
               <span className="text-2xl mb-2 block">{cat.icon}</span>

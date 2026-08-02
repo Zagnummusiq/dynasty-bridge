@@ -4,22 +4,16 @@
   body {
     @apply bg-zinc-50 text-zinc-900;
     font-family: 'Montserrat', sans-serif;
-<<<<<<< HEAD
-=======
   }
   * {
     box-sizing: border-box;
->>>>>>> 49a11c3
   }
 }
 
 @theme {
   --color-brand-navy: #051025;
   --color-brand-blue: #0A1F44;
-<<<<<<< HEAD
-=======
   --color-mustard: #F5A623;
->>>>>>> 49a11c3
 }
 
 /* Hide scrollbar but keep scrollable */
