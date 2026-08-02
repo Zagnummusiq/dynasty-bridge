@@ -9,9 +9,9 @@ const port = process.env.PORT || 8000;
 app.use(cors());
 app.use(express.json());
 
-const connectionString = process.env.RENDER_DB_URL;
+const connectionString = process.env.DATABASE_URL || process.env.RENDER_DB_URL;
 if (!connectionString) {
-  console.error('ERROR: RENDER_DB_URL environment variable is not set.');
+  console.error('ERROR: Database connection string (DATABASE_URL or RENDER_DB_URL) is not set.');
   process.exit(1);
 }
 

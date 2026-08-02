@@ -1,9 +1,9 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-const connectionString = process.env.RENDER_DB_URL;
+const connectionString = process.env.DATABASE_URL || process.env.RENDER_DB_URL;
 if (!connectionString) {
-  console.error('ERROR: RENDER_DB_URL is not set. Aborting.');
+  console.error('ERROR: Database connection string (DATABASE_URL or RENDER_DB_URL) is not set. Aborting.');
   process.exit(1);
 }
 
