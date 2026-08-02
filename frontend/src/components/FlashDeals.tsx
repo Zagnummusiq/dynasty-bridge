@@ -52,13 +52,13 @@ const FlashDeals: React.FC<Props> = ({ products }) => {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-zinc-900">
         <div className="flex items-center gap-3">
-          <Zap size={18} className="text-mustard fill-mustard" />
+          <Zap size={18} className="text-white fill-white" />
           <span className="text-white font-black text-base uppercase tracking-wide">Flash Deals</span>
           {/* Countdown */}
           <div className="flex items-center gap-1 ml-2">
             {[pad(h), pad(m), pad(s)].map((unit, i) => (
               <React.Fragment key={i}>
-                <span className="bg-mustard text-black font-black text-sm px-2 py-0.5 rounded-sm min-w-[32px] text-center">
+                <span className="bg-white text-brand-navy font-black text-sm px-2 py-0.5 rounded-sm min-w-[32px] text-center">
                   {unit}
                 </span>
                 {i < 2 && <span className="text-white font-black text-sm">:</span>}
@@ -117,7 +117,7 @@ const FlashDeals: React.FC<Props> = ({ products }) => {
                 <p className="text-[10px] text-zinc-400 line-through">KES {Number(p.price).toLocaleString()}</p>
                 <button
                   onClick={() => addToCart(p)}
-                  className="mt-1.5 w-full bg-mustard text-black text-[10px] font-bold py-1 rounded-sm hover:opacity-90 flex items-center justify-center gap-1"
+                  className="mt-1.5 w-full bg-brand-navy text-white text-[10px] font-bold py-1 rounded-sm hover:bg-brand-blue flex items-center justify-center gap-1"
                 >
                   <ShoppingCart size={10} /> Add
                 </button>

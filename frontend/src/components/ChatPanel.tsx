@@ -57,11 +57,11 @@ const ChatPanel: React.FC = () => {
             exit={{ opacity: 0, y: 100, scale: 0.8 }}
             className="fixed bottom-24 right-6 w-80 h-96 bg-white rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden border border-zinc-200"
           >
-            <div className="bg-mustard p-4 flex justify-between items-center">
-              <span className="font-bold text-black flex items-center gap-2">
+            <div className="bg-brand-navy p-4 flex justify-between items-center">
+              <span className="font-bold text-white flex items-center gap-2">
                 <Bot size={20} /> Dynasty Assistant
               </span>
-              <button onClick={() => setIsOpen(false)} className="text-black hover:bg-black/10 rounded-full p-1">
+              <button onClick={() => setIsOpen(false)} className="text-white/60 hover:text-white rounded-full p-1">
                 <X size={20} />
               </button>
             </div>
@@ -93,9 +93,9 @@ const ChatPanel: React.FC = () => {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                 placeholder="Ask something..."
-                className="flex-grow bg-zinc-100 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-mustard"
+                className="flex-grow bg-zinc-100 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-navy"
               />
-              <button onClick={handleSend} className="bg-mustard text-black p-2 rounded-full hover:scale-105 transition-transform">
+              <button onClick={handleSend} className="bg-brand-navy text-white p-2 rounded-full hover:bg-brand-blue transition-colors">
                 <Send size={18} />
               </button>
             </div>

@@ -119,7 +119,7 @@ const CategoryBrowser: React.FC<Props> = ({
                   }}
                   className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${
                     selectedCategory === expandedCategory && !selectedSubcategory
-                      ? 'bg-mustard text-black border-mustard'
+                      ? 'bg-brand-navy text-white border-brand-navy'
                       : 'bg-white text-zinc-600 border-zinc-200 hover:border-zinc-400'
                   }`}
                 >

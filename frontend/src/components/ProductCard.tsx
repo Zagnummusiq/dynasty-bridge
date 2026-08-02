@@ -37,7 +37,7 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
 
         {/* In-store badge */}
         {product.source === 'shop' && (
-          <span className="absolute top-2 right-2 bg-mustard text-black text-[9px] font-black px-1.5 py-0.5 rounded-sm">
+          <span className="absolute top-2 right-2 bg-brand-navy text-white text-[9px] font-black px-1.5 py-0.5 rounded-sm">
             In Store
           </span>
         )}
@@ -70,7 +70,7 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
             <Star
               key={i}
               size={10}
-              className={i <= 4 ? 'fill-mustard text-mustard' : 'fill-zinc-200 text-zinc-200'}
+              className={i <= 4 ? 'fill-brand-navy text-brand-navy' : 'fill-zinc-200 text-zinc-200'}
             />
           ))}
           <span className="text-[9px] text-zinc-400 ml-0.5">(4.0)</span>
@@ -84,7 +84,7 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
         {/* Add to cart */}
         <button
           onClick={e => { e.stopPropagation(); addToCart(product); }}
-          className="w-full bg-mustard text-black text-xs font-bold py-2 rounded-sm hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-1.5 mt-auto"
+          className="w-full bg-brand-navy text-white text-xs font-bold py-2 rounded-sm hover:bg-brand-blue active:scale-95 transition-all flex items-center justify-center gap-1.5 mt-auto"
         >
           <ShoppingCart size={13} />
           Add to Cart

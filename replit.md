@@ -74,6 +74,8 @@ To re-seed the database: `cd backend && node init_db.js`
 - An offline banner appears automatically when the device loses connectivity.
 
 ## User preferences
-- Keep the existing design language: mustard (#FFDB58), black, zinc palette.
+- Maintain the premium brand identity: Navy (#051025), Blue (#0A1F44), and Silver/White accents.
+- Use Montserrat as the primary typeface for all headings and body text.
+- Focus strictly on high-end electronics and home appliances.
 - Shop is located at Mumias, opposite Frankmatt Junction. Hotline: 0740930686.
 - WhatsApp checkout is the primary order flow.

@@ -74,7 +74,7 @@ const HeroBanner: React.FC<Props> = ({ onShopCategory }) => {
         <div className="max-w-7xl mx-auto px-8 w-full flex items-center justify-between">
           {/* Text side */}
           <div className="max-w-xl">
-            <p className="text-mustard text-xs font-bold uppercase tracking-widest mb-2">Dynasty Bridge — Mumias</p>
+            <p className="text-white/60 text-xs font-bold uppercase tracking-widest mb-2">Dynasty Bridge — Mumias</p>
             <h2 className="text-white text-3xl md:text-5xl font-black leading-tight mb-3">
               {slide.headline}
             </h2>
@@ -84,7 +84,7 @@ const HeroBanner: React.FC<Props> = ({ onShopCategory }) => {
                 onShopCategory(slide.category);
                 document.getElementById('products-grid')?.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="bg-mustard text-black font-bold px-8 py-3 rounded-sm hover:opacity-90 transition-opacity text-sm uppercase tracking-wide"
+              className="bg-white text-brand-navy font-bold px-8 py-3 rounded-sm hover:bg-zinc-100 transition-colors text-sm uppercase tracking-wide"
             >
               {slide.cta} →
             </button>
@@ -116,7 +116,7 @@ const HeroBanner: React.FC<Props> = ({ onShopCategory }) => {
           <button
             key={i}
             onClick={() => setCurrent(i)}
-            className={`rounded-full transition-all ${i === current ? 'bg-mustard w-6 h-2' : 'bg-white/50 w-2 h-2'}`}
+            className={`rounded-full transition-all ${i === current ? 'bg-white w-6 h-2' : 'bg-white/50 w-2 h-2'}`}
           />
         ))}
       </div>
