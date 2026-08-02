@@ -4,20 +4,37 @@
   body {
     @apply bg-zinc-50 text-zinc-900;
     font-family: 'Montserrat', sans-serif;
+<<<<<<< HEAD
+=======
+  }
+  * {
+    box-sizing: border-box;
+>>>>>>> 49a11c3
   }
 }
 
 @theme {
   --color-brand-navy: #051025;
   --color-brand-blue: #0A1F44;
+<<<<<<< HEAD
+=======
+  --color-mustard: #F5A623;
+>>>>>>> 49a11c3
 }
+
+/* Hide scrollbar but keep scrollable */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
+.line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 
 .artistic-s {
   font-style: italic;
-  font-weight: bold;
-}
-
-.graffiti-bridge {
-  font-family: 'Brush Script MT', cursive;
   font-weight: bold;
 }
